@@ -24,7 +24,7 @@ def fit_lmk3d( lmk_3d,                      # input landmark 3d
                model,                       # model
                lmk_face_idx, lmk_b_coords,  # landmark embedding
                weights,                     # weights for the objectives
-               shape_num=300, expr_num=100, opt_options=None ):
+               shape_num=300, expr_num=100, opt_options: Optional[dict] = None ):
     
     """ function: fit FLAME model to 3D landmarks
 
