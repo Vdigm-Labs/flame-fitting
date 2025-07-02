@@ -1,73 +1,53 @@
 import numpy as np
+import trimesh
 
 
 def compute_mple(pred_landmarks, gt_landmarks):
     """
     Mean Per-Landmark Error (MPLE)
-    :param pred_landmarks: (B, N, 3)
-    :param gt_landmarks: (B, N, 3)
-    :return: (B,) mean error per sample
+    :param pred_landmarks: (N, 3)
+    :param gt_landmarks: (N, 3)
+    :return: scalar mean error
     """
-    errors = np.linalg.norm(pred_landmarks - gt_landmarks, axis=-1)  # (B, N)
-    mple = errors.mean(axis=1)  # (B,)
+    errors = np.linalg.norm(pred_landmarks - gt_landmarks, axis=-1)  # (N,)
+    mple = errors.mean()
     return mple
 
 
-def compute_nle(pred_landmarks, gt_landmarks, normalization_pairs):
+def compute_nle(pred_landmarks, gt_landmarks, normalization_pair):
     """
     Normalized Landmark Error (NLE)
-    :param pred_landmarks: (B, N, 3)
-    :param gt_landmarks: (B, N, 3)
-    :param normalization_pairs: list of 2 indices (e.g. [left_eye_idx, right_eye_idx])
-    :return: (B,) normalized error per sample
+    :param pred_landmarks: (N, 3)
+    :param gt_landmarks: (N, 3)
+    :param normalization_pair: tuple of 2 indices (e.g. (36, 45))
+    :return: scalar normalized error
     """
-    mple = compute_mple(pred_landmarks, gt_landmarks)  # (B,)
-    inter_ocular_dists = np.linalg.norm(
-        gt_landmarks[:, normalization_pairs[0]] - gt_landmarks[:, normalization_pairs[1]], axis=1
-    )  # (B,)
-    nle = mple / (inter_ocular_dists + 1e-8)  # avoid division by zero
+    mple = compute_mple(pred_landmarks, gt_landmarks)
+    inter_ocular_dist = np.linalg.norm(
+        gt_landmarks[normalization_pair[0]] - gt_landmarks[normalization_pair[1]]
+    )
+    nle = mple / (inter_ocular_dist + 1e-8)  # avoid division by zero
     return nle
 
 
-def compute_parameter_norms(pose_params, shape_params):
-    """
-    Compute L2 norms of pose and shape parameters
-    :param pose_params: (B, P)
-    :param shape_params: (B, S)
-    :return: dict with pose and shape norms
-    """
-    pose_norms = np.linalg.norm(pose_params, axis=1)  # (B,)
-    shape_norms = np.linalg.norm(shape_params, axis=1)  # (B,)
-    return {
-        'pose_norm_mean': pose_norms.mean(),
-        'pose_norm_std': pose_norms.std(),
-        'shape_norm_mean': shape_norms.mean(),
-        'shape_norm_std': shape_norms.std()
-    }
-
-
-def summarize_metrics(mple, nle):
-    """
-    Print MPLE and NLE with mean ± std
-    """
-    print(f"MPLE: {mple.mean():.4f} ± {mple.std():.4f}")
-    print(f"NLE : {nle.mean():.4f} ± {nle.std():.4f}")
-
-
-# === Example usage ===
 if __name__ == "__main__":
-    B, N = 16, 68  # batch size, number of landmarks
-    pred = np.random.rand(B, N, 3)
-    gt = np.random.rand(B, N, 3)
+    # === Load predicted and ground-truth .obj files ===
+    pred_mesh = trimesh.load("./data/fit_lmk3d_result_jinju.obj", process=False)
+    gt_mesh = trimesh.load("./data/fit_lmk3d_result_madong.obj", process=False)
 
-    pose = np.random.randn(B, 72)
-    shape = np.random.randn(B, 10)
+    # === Extract vertices ===
+    pred_vertices = pred_mesh.vertices  # (N, 3)
+    gt_vertices = gt_mesh.vertices      # (N, 3)
 
-    mple = compute_mple(pred, gt)
-    nle = compute_nle(pred, gt, normalization_pairs=[36, 45])  # eye corner indices
+    # === Check same number of vertices ===
+    assert pred_vertices.shape == gt_vertices.shape, "Meshes have different number of vertices."
 
-    norms = compute_parameter_norms(pose, shape)
+    # === Example: eye corner indices for normalization ===
+    left_eye_idx = 36
+    right_eye_idx = 45
 
-    summarize_metrics(mple, nle)
-    print(norms)
+    mple = compute_mple(pred_vertices, gt_vertices)
+    nle = compute_nle(pred_vertices, gt_vertices, normalization_pair=(left_eye_idx, right_eye_idx))
 
+    print(f"MPLE: {mple:.4f} meters")
+    print(f"NLE : {nle:.4f}")
