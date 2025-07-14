@@ -34,6 +34,14 @@ ax2.set_ylabel("Y")
 ax2.axis('equal')
 ax2.legend()
 
+# Add text labels to GT landmarks
+for i, (x, y) in enumerate(gt[:, :2]):
+    ax2.text(x, y, str(i), fontsize=6, color='black')
+
+# Add text labels to Pred landmarks
+for i, (x, y) in enumerate(pred[:, :2]):
+    ax2.text(x, y, str(i), fontsize=6, color='black')
+
 plt.tight_layout()
 plt.savefig("landmark_comparison_clean.png")
 print("\n📸 Image saved to landmark_comparison_clean.png")
