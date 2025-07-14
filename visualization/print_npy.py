@@ -1,7 +1,7 @@
 import numpy as np
 
 # Load embedding file
-embedding_path = "mediapipe_landmark_embedding.npz"
+embedding_path = "../models/mediapipe_landmark_51embedding.npz"
 data = np.load(embedding_path)
 
 # Extract arrays

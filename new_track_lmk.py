@@ -149,6 +149,8 @@ target_std = (TARGET_Z_STD_MM / 1000.0)
 scale_factor = np.clip(target_std / (z_std + 1e-9), 0.5, 3.0)  # 안전 범위
 print(f"[INFO] z_std={z_std:.5f} m → scale ×{scale_factor:.2f}")
 z_centered = z_tmp * scale_factor
+# 임시로 0값으로 둠
+# z_centered = np.full_like(z_tmp, 0)
 
 # (e) (105,3) 스택
 lmk3d_m = np.column_stack((xy_m[:, 0], xy_m[:, 1], z_centered)).astype(np.float32)

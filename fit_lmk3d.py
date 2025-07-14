@@ -135,7 +135,13 @@ def run_fitting():
 
     # landmark embedding
     lmk_emb_path = './models/flame_static_embedding.pkl' 
-    lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
+    # lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
+    
+    emb_path = "./data/mediapipe_landmark_embedding.npz"
+    emb_path = "./data/mediapipe_landmark_51embedding.npz"
+    emb = np.load(emb_path)
+    lmk_face_idx = emb["lmk_face_idx"]
+    lmk_b_coords = emb["lmk_b_coords"]
     print("loaded lmk embedding")
 
     # output
